@@ -68,6 +68,41 @@ public partial class FishRecorder
         }
     }
 
+    public void ImportJson(FileInfo file)
+    {
+        try
+        {
+            var data = File.ReadAllText(file.FullName);
+            var jsonRecords = JsonConvert.DeserializeObject<List<FishRecord.JsonStruct>>(data);
+            if (jsonRecords == null)
+            {
+                GatherBuddy.Log.Warning($"Could not parse json from {file.FullName}. Aborting import.");
+                return;
+            }
+
+            var records = jsonRecords.Select(x => x.ToFishRecord()).ToList();
+
+            if (records.Any(r => !r.VerifyValidity()))
+            {
+                GatherBuddy.Log.Warning($"Invalid record found in {file.FullName}. Aborting import.");
+                return;
+            }
+
+            foreach (var record in records)
+            {
+                Add(record);
+            }
+
+            RemoveDuplicates();
+
+            GatherBuddy.Log.Information($"Imported {Records.Count} fish records from {file.FullName}.");
+        }
+        catch (Exception e)
+        {
+            GatherBuddy.Log.Warning($"Could not import json file from {file.FullName}:\n{e}");
+        }
+    }
+
     public void ImportBase64(string data)
     {
         try

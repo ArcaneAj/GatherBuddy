@@ -530,6 +530,7 @@ public partial class Interface
     private readonly RecordTable _recordTable;
     private          bool        WriteTsv  = false;
     private          bool        WriteJson = false;
+    private          bool        ReadJson  = false;
 
 
     private void DrawRecordTab()
@@ -604,6 +605,22 @@ public partial class Interface
         ImGui.SameLine();
         try
         {
+            if (ImGui.Button("Import JSON"))
+            {
+                ImGui.OpenPopup(RecordTable.FileNamePopup);
+                ReadJson = true;
+            }
+
+            ImGuiUtil.HoverTooltip("Given a path, import all records from a single JSON file.");
+        }
+        catch
+        {
+            // ignored
+        }
+
+        ImGui.SameLine();
+        try
+        {
             if (ImGui.Button("Export TSV"))
             {
                 ImGui.OpenPopup(RecordTable.FileNamePopup);
@@ -650,6 +667,21 @@ public partial class Interface
             }
 
             WriteJson = false;
+        }
+
+        if (ReadJson)
+        {
+            try
+            {
+                var file = new FileInfo(name);
+                _plugin.FishRecorder.ImportJson(file);
+            }
+            catch
+            {
+                // ignored
+            }
+
+            ReadJson = false;
         }
 
         if (WriteTsv)

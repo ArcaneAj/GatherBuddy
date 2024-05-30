@@ -186,6 +186,42 @@ public struct FishRecord
         public float    Size;
         public bool     Collectible;
         public bool     Large;
+
+        internal FishRecord ToFishRecord()
+        {
+            var record =  new FishRecord
+            {
+                _bait         = BaitItemId,
+                _catch        = CatchItemId,
+                _fishingSpot  = FishingSpotId,
+                _timeStamp    = TimeStamp,
+                Amount        = Amount,
+                Bite          = BiteTime,
+                ContentIdHash = (int)ContentIdHash,
+                Gathering     = Gathering,
+                Perception    = Perception,
+                Size          = (ushort)(Size * 10f),
+                Flags         = ComputeEffects(),
+            };
+            record.SetTugHook(Tug, HookSet);
+            return record;
+        }
+
+        private Effects ComputeEffects()
+        {
+            return (Snagging      ? Effects.Snagging      : Effects.None) |
+                   (Chum          ? Effects.Chum          : Effects.None) |
+                   (Intuition     ? Effects.Intuition     : Effects.None) |
+                   (FishEyes      ? Effects.FishEyes      : Effects.None) |
+                   (IdenticalCast ? Effects.IdenticalCast : Effects.None) |
+                   (SurfaceSlap   ? Effects.SurfaceSlap   : Effects.None) |
+                   (PrizeCatch    ? Effects.PrizeCatch    : Effects.None) |
+                   (Patience      ? Effects.Patience      : Effects.None) |
+                   (Patience2     ? Effects.Patience2     : Effects.None) |
+                   (Collectible   ? Effects.Collectible   : Effects.None) |
+                   (Large         ? Effects.Large         : Effects.None) |
+                   (Valid         ? Effects.Valid         : Effects.None);
+        }
     }
 
     internal JsonStruct ToJson()
