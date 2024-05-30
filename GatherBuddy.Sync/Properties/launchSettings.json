@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "GatherBuddy.Sync": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7294",
+      "launchBrowser": false
+    }
+  }
+}

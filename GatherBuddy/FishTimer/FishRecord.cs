@@ -160,7 +160,7 @@ public struct FishRecord
         }
     }
 
-    internal struct JsonStruct
+    public struct JsonStruct
     {
         public uint     ContentIdHash;
         public ushort   Gathering;
@@ -224,7 +224,7 @@ public struct FishRecord
         }
     }
 
-    internal JsonStruct ToJson()
+    public JsonStruct ToJson()
         => new()
         {
             ContentIdHash = (uint) ContentIdHash,
