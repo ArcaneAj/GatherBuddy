@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using GatherBuddy.Sync.Utilities;
 using Microsoft.Extensions.Logging;
 
@@ -13,8 +14,13 @@ namespace GatherBuddy.Sync.Services
             return await tableClient.UpsertEntityAsync(entity);
         }
 
-        public async Task<Response<IReadOnlyList<Response>>> UpsertBatchAsync<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        public async Task<Response<IReadOnlyList<Response>>?> UpsertBatchAsync<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
         {
+            if (!entities.Any())
+            {
+                return null;
+            }
+
             var tableClient = await GetTableAsync(tableName);
             var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.UpsertReplace, e));
 
@@ -37,6 +43,42 @@ namespace GatherBuddy.Sync.Services
             }
 
             return result;
+        }
+
+        public async Task<Response<IReadOnlyList<Response>>?> DeleteBatchAsync<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        {
+            if (!entities.Any())
+            {
+                return null;
+            }
+
+            var tableClient = await GetTableAsync(tableName);
+            var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.Delete, e));
+
+            return await tableClient.SubmitTransactionAsync(transaction);
+        }
+
+        public async Task<IEnumerable<TableItem>> ListTablesAsync()
+        {
+            var tables = new List<TableItem>();
+            await foreach (var page in _serviceClient.QueryAsync().AsPages())
+            {
+                tables.AddRange(page.Values);
+            }
+
+            return tables;
+        }
+
+        public async IAsyncEnumerable<T> QueryAllAsync<T>(string tableName) where T : class, ITableEntity
+        {
+            var tableClient = await GetTableAsync(tableName);
+            await foreach (var page in tableClient.QueryAsync<T>().AsPages())
+            {
+                foreach (var item in page.Values)
+                {
+                    yield return item;
+                }
+            }
         }
 
         private async Task<TableClient> GetTableAsync(string tableName)

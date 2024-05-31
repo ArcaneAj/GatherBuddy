@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Azure.Data.Tables;
+using Azure.Data.Tables.Models;
 using GatherBuddy.Sync.Utilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -27,8 +28,13 @@ namespace GatherBuddy.Sync.Services
             return tableClient.UpsertEntity(entity);
         }
 
-        public Response<IReadOnlyList<Response>> UpsertBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        public Response<IReadOnlyList<Response>>? UpsertBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
         {
+            if (!entities.Any())
+            {
+                return null;
+            }
+
             var tableClient = GetTable(tableName);
             var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.UpsertReplace, e));
 
@@ -45,6 +51,30 @@ namespace GatherBuddy.Sync.Services
         {
             var tableClient = GetTable(tableName);
             return tableClient.Query<T>(x => x.PartitionKey == partitionKey);
+        }
+
+        public Response<IReadOnlyList<Response>>? DeleteBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        {
+            if (!entities.Any())
+            {
+                return null;
+            }
+
+            var tableClient = GetTable(tableName);
+            var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.Delete, e));
+
+            return tableClient.SubmitTransaction(transaction);
+        }
+
+        public IEnumerable<TableItem> ListTables()
+        {
+            return _serviceClient.Query().AsEnumerable();
+        }
+
+        public IEnumerable<T> QueryAll<T>(string tableName) where T : class, ITableEntity
+        {
+            var tableClient = GetTable(tableName);
+            return tableClient.Query<T>().AsEnumerable();
         }
 
         private TableClient GetTable(string tableName)

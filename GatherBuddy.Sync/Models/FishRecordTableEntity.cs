@@ -25,6 +25,7 @@ namespace GatherBuddy.Sync.Models
         public string? RowKey { get; set; }
         public DateTimeOffset? Timestamp { get; set; }
         public ETag ETag { get; set; }
+        internal static string TablePrefix => "fishingspotid";
 
         public static FishRecordTableEntity FromFishRecord(FishRecord.JsonStruct record, string name)
         {
@@ -91,7 +92,7 @@ namespace GatherBuddy.Sync.Models
 
         public string GetTableId()
         {
-            return $"fishingspotid{FishingSpotId}";
+            return $"{TablePrefix}{FishingSpotId}";
         }
 
         public long ContentIdHash;
