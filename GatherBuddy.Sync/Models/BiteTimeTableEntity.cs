@@ -11,9 +11,10 @@ namespace GatherBuddy.Sync.Models
             RowKey = string.Empty;
             Dirty = false;
         }
-        public BiteTimeTableEntity(FishRecordTableEntity fishRecord) {
-            PartitionKey = fishRecord.FishingSpotId.ToString();
-            RowKey = fishRecord.PartitionKey;
+
+        public BiteTimeTableEntity(FishRecordTableEntity fishRecord, string biteTimePartitionKey, string biteTimeRowKey) {
+            PartitionKey = biteTimePartitionKey;
+            RowKey = biteTimeRowKey;
             Max = fishRecord.BiteTime;
             Min = fishRecord.BiteTime;
             Dirty = true;
@@ -26,6 +27,7 @@ namespace GatherBuddy.Sync.Models
         public long Max { get; set; }
         public long Min { get; set; }
         internal bool Dirty { get; set; }
+        internal const string BiteTimeTableName = "bitetimes";
 
         internal void Update(long biteTime)
         {

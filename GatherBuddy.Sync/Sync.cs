@@ -54,11 +54,10 @@ namespace GatherBuddy.Sync
         }
 
         [Function("SyncRead")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Function, "get", Route = "SyncRead/{spotId:int}/{baitId:int}")] HttpRequest req, int spotId, int baitId)
         {
-            var entity = await _tableService.ReadAsync<FishRecordTableEntity>("test", "partitionKey", "rowKey");
-            _logger.LogInformation(entity?.PartitionKey);
-            return new OkObjectResult("Welcome to Azure Functions!");
+            var partitionKey = string.Join('_', spotId, baitId);
+            return new OkObjectResult(await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey));
         }
     }
 }

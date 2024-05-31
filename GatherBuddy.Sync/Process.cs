@@ -9,7 +9,6 @@ namespace GatherBuddy.Sync
 {
     public class Process
     {
-        private const string BiteTimeTableName = "bitetimes";
         private readonly ILogger _logger;
         private readonly ITableService _tableService;
 
@@ -48,9 +47,9 @@ namespace GatherBuddy.Sync
             var processedEntities = new List<FishRecordTableEntity>();
             await foreach (var entity in _tableService.QueryAllAsync<FishRecordTableEntity>(table))
             {
-                var biteTimePartitionKey = entity.FishingSpotId.ToString();
-                var biteTimeRowKey = entity.PartitionKey;
-                var biteTimeDictKey = string.Join(',', entity.FishingSpotId.ToString(), entity.PartitionKey);
+                var biteTimePartitionKey = string.Join('_', entity.FishingSpotId.ToString(), entity.BaitItemId);
+                var biteTimeRowKey = entity.CatchItemId.ToString();
+                var biteTimeDictKey = string.Join(',', biteTimePartitionKey, biteTimeRowKey);
                 var biteTime = await GetBiteTime(biteTimes, entity, biteTimePartitionKey, biteTimeRowKey, biteTimeDictKey);
 
                 biteTime.Update(entity.BiteTime);
@@ -58,7 +57,7 @@ namespace GatherBuddy.Sync
             }
 
             var dirtyBiteTimes = biteTimes.Values.Where(x => x.Dirty);
-            await _tableService.UpsertBatchAsync(BiteTimeTableName, dirtyBiteTimes);
+            await _tableService.UpsertBatchAsync(BiteTimeTableEntity.BiteTimeTableName, dirtyBiteTimes);
             await _tableService.DeleteBatchAsync(table, processedEntities);
         }
 
@@ -70,10 +69,10 @@ namespace GatherBuddy.Sync
             }
 
             // try fetch the bite time key
-            var biteTime = await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableName, biteTimePartitionKey, biteTimeRowKey);
+            var biteTime = await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, biteTimePartitionKey, biteTimeRowKey);
             if (biteTime == null) // else create a new one based on the current entity
             {
-                biteTime = new BiteTimeTableEntity(entity);
+                biteTime = new BiteTimeTableEntity(entity, biteTimePartitionKey, biteTimeRowKey);
             }
 
             biteTimes[biteTimeDictKey] = biteTime;
