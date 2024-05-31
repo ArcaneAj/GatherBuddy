@@ -48,9 +48,10 @@ namespace GatherBuddy.Sync
         }
 
         [Function("SyncRead")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Function, "get", Route = "SyncRead/{spotId:int}/{baitId:int}")] HttpRequest req, int spotId, int baitId)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Function, "get", Route = "SyncRead/{spotId:int}")] HttpRequest req, int spotId)
         {
-            var partitionKey = string.Join('_', spotId, baitId);
+            //TODO: Cache this?
+            var partitionKey = spotId.ToString();
             return new OkObjectResult(await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey));
         }
     }

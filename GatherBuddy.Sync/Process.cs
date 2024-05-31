@@ -47,8 +47,8 @@ namespace GatherBuddy.Sync
             var processedEntities = new List<FishRecordTableEntity>();
             await foreach (var entity in _tableService.QueryAllAsync<FishRecordTableEntity>(table))
             {
-                var biteTimePartitionKey = string.Join('_', entity.FishingSpotId.ToString(), entity.BaitItemId);
-                var biteTimeRowKey = entity.CatchItemId.ToString();
+                var biteTimePartitionKey = entity.FishingSpotId.ToString();
+                var biteTimeRowKey = entity.PartitionKey;
                 var biteTimeDictKey = string.Join(',', biteTimePartitionKey, biteTimeRowKey);
                 var biteTime = await GetBiteTime(biteTimes, entity, biteTimePartitionKey, biteTimeRowKey, biteTimeDictKey);
 
