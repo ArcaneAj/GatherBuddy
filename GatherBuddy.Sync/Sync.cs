@@ -21,19 +21,13 @@ namespace GatherBuddy.Sync
         }
 
         [Function("SyncWrite")]
-        public async Task<IActionResult> Post([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
+        public async Task<IActionResult> Post([HttpTrigger(AuthorizationLevel.Function, "post", Route = "SyncWrite/{name}")] HttpRequest req, string name)
         {
             var data = await new StreamReader(req.Body).ReadToEndAsync();
             var records = JsonConvert.DeserializeObject<List<FishRecord.JsonStruct>>(data);
             if (records == null)
             {
                 return new BadRequestObjectResult("Could not parse json. Aborting import.");
-            }
-
-            var name = req.Query["name"];
-            if (string.IsNullOrEmpty(name))
-            {
-                return new BadRequestObjectResult("Name must not be null or empty");
             }
 
             var entities = records.Where(x => x.CatchItemId != 0).Select(x => FishRecordTableEntity.FromFishRecord(x, name!)).ToList();
