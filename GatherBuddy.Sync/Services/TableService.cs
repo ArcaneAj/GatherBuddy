@@ -30,17 +30,9 @@ namespace GatherBuddy.Sync.Services
             return tableClient.UpsertEntity(entity);
         }
 
-        public Response<IReadOnlyList<Response>>? UpsertBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        public IEnumerable<Response<IReadOnlyList<Response>>> UpsertBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
         {
-            if (!entities.Any())
-            {
-                return null;
-            }
-
-            var tableClient = GetTable(tableName);
-            var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.UpsertReplace, e));
-
-            return tableClient.SubmitTransaction(transaction);
+            return Batch(tableName, entities, TableTransactionActionType.UpsertReplace);
         }
 
         public T? Read<T>(string tableName, string partitionKey, string rowKey) where T : class, ITableEntity
@@ -55,17 +47,9 @@ namespace GatherBuddy.Sync.Services
             return tableClient.Query<T>(x => x.PartitionKey == partitionKey);
         }
 
-        public Response<IReadOnlyList<Response>>? DeleteBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
+        public IEnumerable<Response<IReadOnlyList<Response>>> DeleteBatch<T>(string tableName, IEnumerable<T> entities) where T : ITableEntity
         {
-            if (!entities.Any())
-            {
-                return null;
-            }
-
-            var tableClient = GetTable(tableName);
-            var transaction = entities.Select(e => new TableTransactionAction(TableTransactionActionType.Delete, e));
-
-            return tableClient.SubmitTransaction(transaction);
+            return Batch(tableName, entities, TableTransactionActionType.Delete);
         }
 
         public IEnumerable<TableItem> ListTables()
@@ -100,6 +84,14 @@ namespace GatherBuddy.Sync.Services
 
             _logger.LogInformation($"The created table's name is {tableClient.Name}.");
             return tableClient;
+        }
+
+        private IEnumerable<Response<IReadOnlyList<Response>>> Batch<T>(string tableName, IEnumerable<T> entities, TableTransactionActionType actionType) where T : ITableEntity
+        {
+            var tableClient = GetTable(tableName);
+            return entities
+                .GroupBy(x => x.PartitionKey)
+                .Select(group => tableClient.SubmitTransaction(group.Select(e => new TableTransactionAction(actionType, e))));
         }
     }
 }
