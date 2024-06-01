@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using GatherBuddy.Config;
+using GatherBuddy.FishTimer.Http;
 using GatherBuddy.Gui;
+using GatherBuddy.Plugin;
 using GatherBuddy.SeFunctions;
 using ImGuiNET;
 using OtterGui;
 using OtterGui.Raii;
+using static GatherBuddy.FishTimer.FishRecordTimes;
 using FishingSpot = GatherBuddy.Classes.FishingSpot;
 using TimeStamp = GatherBuddy.Time.TimeStamp;
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GatherBuddy.FishTimer;
 
@@ -47,6 +48,14 @@ public class FishRecordTimes
             }
 
             return ret;
+        }
+
+        public void Merge(Times times)
+        {
+            Min = Math.Min(Min, times.Min);
+            Max = Math.Max(Max, times.Max);
+            MinChum = Math.Min(MinChum, times.MinChum);
+            MaxChum = Math.Max(MaxChum, times.MaxChum);
         }
     }
 

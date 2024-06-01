@@ -75,15 +75,20 @@ public partial class Configuration : IPluginConfiguration
     public int SeColorAlarm     = DefaultSeColorAlarm;
 
     // Fish Timer
-    public bool   ShowFishTimer         { get; set; } = true;
-    public bool   FishTimerEdit         { get; set; } = true;
-    public bool   FishTimerClickthrough { get; set; } = false;
-    public bool   HideUncaughtFish      { get; set; } = false;
-    public bool   HideUnavailableFish   { get; set; } = false;
-    public bool   ShowFishTimerUptimes  { get; set; } = true;
-    public bool   HideFishSizePopup     { get; set; } = false;
-    public ushort FishTimerScale        { get; set; } = 40000;
-    public byte   ShowSecondIntervals   { get; set; } = 7;
+    public bool   ShowFishTimer           { get; set; } = true;
+    public bool   FishTimerEdit           { get; set; } = true;
+    public bool   FishTimerClickthrough   { get; set; } = false;
+    public bool   HideUncaughtFish        { get; set; } = false;
+    public bool   HideUnavailableFish     { get; set; } = false;
+    public bool   ShowFishTimerUptimes    { get; set; } = true;
+    public bool   HideFishSizePopup       { get; set; } = false;
+#if DEBUG
+    public bool EnableCrowdSourceTimers { get; set; } = true;
+#else
+    public bool   EnableCrowdSourceTimers { get; set; } = false;
+#endif
+    public ushort FishTimerScale          { get; set; } = 40000;
+    public byte   ShowSecondIntervals     { get; set; } = 7;
 
     // Spearfish Helper
     public bool ShowSpearfishHelper          { get; set; } = true;

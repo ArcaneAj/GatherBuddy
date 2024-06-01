@@ -319,6 +319,11 @@ public partial class Interface
                 "Prevents the popup window that shows you your caught fish and its size, amount and quality from being shown.",
                 GatherBuddy.Config.HideFishSizePopup, b => GatherBuddy.Config.HideFishSizePopup = b);
 
+        public static void DrawCrowdSourceTimers()
+            => DrawCheckbox("Opt In To Crowd Sourced Fish Timers",
+                "Occasionally uploads the fish you catch and their catch timers to a central service, which in return can be queried for the max/min time across all fish.",
+                GatherBuddy.Config.EnableCrowdSourceTimers, b => GatherBuddy.Config.EnableCrowdSourceTimers = b);
+
 
         // Spearfishing Helper
         public static void DrawSpearfishHelperBox()
@@ -588,6 +593,7 @@ public partial class Interface
                 ConfigFunctions.DrawFishTimerScale();
                 ConfigFunctions.DrawFishTimerIntervals();
                 ConfigFunctions.DrawHideFishPopupBox();
+                ConfigFunctions.DrawCrowdSourceTimers();
                 ImGui.TreePop();
             }
 

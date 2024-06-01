@@ -1,15 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Dalamud;
 using Dalamud.Plugin.Services;
 using GatherBuddy.Classes;
 using GatherBuddy.Enums;
+using GatherBuddy.FishTimer.Http;
 using GatherBuddy.FishTimer.Parser;
+using GatherBuddy.Plugin;
 using GatherBuddy.SeFunctions;
 using GatherBuddy.Structs;
 using GatherBuddy.Time;
 using Lumina.Excel.GeneratedSheets;
+using static GatherBuddy.FishTimer.FishRecordTimes;
 using FishingSpot = GatherBuddy.Classes.FishingSpot;
 
 namespace GatherBuddy.FishTimer;
@@ -32,6 +36,10 @@ public partial class FishRecorder
     internal          CatchSteps    Step      = 0;
     internal          FishingState  LastState = FishingState.None;
     internal readonly Stopwatch     Timer     = new();
+    private readonly HttpService _httpService = new();
+    private Dictionary<uint, Dictionary<uint, Times>> _extendedTimes = [];
+
+    public Dictionary<uint, Dictionary<uint, Times>> ExtendedTimes => _extendedTimes;
 
     public Fish? LastCatch;
 
@@ -134,6 +142,17 @@ public partial class FishRecorder
         CheckStats();
         Record.Bait        = GetCurrentBait();
         Record.FishingSpot = spot;
+
+        if (GatherBuddy.Config.EnableCrowdSourceTimers && spot != null)
+        {
+            var timer = Stopwatch.StartNew();
+            _extendedTimes = _httpService.GetFishData(spot.Id.ToString()) ?? [];
+            timer.Stop();
+
+            Communicator.Print("OnBeganFishing");
+            Communicator.Print(timer.ElapsedMilliseconds.ToString());
+        }
+
         if (Record.HasSpot)
             Step |= CatchSteps.IdentifiedSpot;
 

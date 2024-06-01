@@ -11,15 +11,17 @@ namespace GatherBuddy.Sync.Services
     internal partial class TableService : ITableService
     {
         private readonly ILogger<TableService> _logger;
+        private readonly Telemetry _telemetry;
         private readonly TableServiceClient _serviceClient;
 
         private readonly ConcurrentDictionary<string, TableClient> _tableItems = [];
 
-        public TableService(ILogger<TableService> logger, IConfiguration configuration)
+        public TableService(ILogger<TableService> logger, Telemetry telemetry, IConfiguration configuration)
         {
             _logger = logger;
             var connectionString = configuration["AzureWebJobsStorage"];
             _serviceClient = new TableServiceClient(connectionString);
+            _telemetry = telemetry;
         }
 
         public Response Upsert<T>(string tableName, T entity) where T : ITableEntity

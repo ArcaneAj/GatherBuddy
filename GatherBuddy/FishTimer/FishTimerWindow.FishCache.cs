@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface.Internal;
@@ -7,9 +8,10 @@ using GatherBuddy.Classes;
 using GatherBuddy.Config;
 using GatherBuddy.Enums;
 using GatherBuddy.Gui;
+using GatherBuddy.Plugin;
 using GatherBuddy.Time;
 using ImGuiNET;
-using ImGuiScene;
+using static GatherBuddy.FishTimer.FishRecordTimes;
 using static GatherBuddy.Gui.Interface;
 using ImRaii = OtterGui.Raii.ImRaii;
 
@@ -68,11 +70,24 @@ public partial class FishTimerWindow
             Uncaught      = true;
             if (recorder.Times.TryGetValue(fish.ItemId, out var times))
             {
-                _all = times.All;
+                _all.Merge(times.All);
                 if (times.Data.TryGetValue(recorder.Record.BaitId, out var baitTimes))
                 {
-                    _baitSpecific = baitTimes;
+                    _baitSpecific.Merge(baitTimes);
                     Uncaught      = false;
+                }
+            }
+
+            if (recorder.ExtendedTimes.TryGetValue(fish.ItemId, out var extendedTimesByBait))
+            {
+                foreach (var extendedTime in extendedTimesByBait.Values)
+                {
+                    _all.Merge(extendedTime);
+                }
+
+                if (extendedTimesByBait.TryGetValue(recorder.Record.BaitId, out var baitExtendedTime))
+                {
+                    _baitSpecific.Merge(baitExtendedTime);
                 }
             }
 

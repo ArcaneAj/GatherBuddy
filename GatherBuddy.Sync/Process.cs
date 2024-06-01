@@ -52,7 +52,7 @@ namespace GatherBuddy.Sync
                 var biteTimeDictKey = string.Join(',', biteTimePartitionKey, biteTimeRowKey);
                 var biteTime = await GetBiteTime(biteTimes, entity, biteTimePartitionKey, biteTimeRowKey, biteTimeDictKey);
 
-                biteTime.Update(entity.BiteTime);
+                biteTime.Update(entity.BiteTime, entity.Chum);
                 processedEntities.Add(entity);
             }
 

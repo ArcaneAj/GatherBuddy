@@ -3,6 +3,7 @@ using Azure.Data.Tables;
 using Azure.Data.Tables.Models;
 using GatherBuddy.Sync.Utilities;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace GatherBuddy.Sync.Services
 {
@@ -35,6 +36,7 @@ namespace GatherBuddy.Sync.Services
 
         public async Task<IEnumerable<T>> ReadAsync<T>(string tableName, string partitionKey) where T : class, ITableEntity
         {
+            var timer = Stopwatch.StartNew();
             var tableClient = await GetTableAsync(tableName);
             var result = new List<T>();
             await foreach (var page in tableClient.QueryAsync<T>(x => x.PartitionKey == partitionKey).AsPages())
@@ -42,6 +44,7 @@ namespace GatherBuddy.Sync.Services
                 result.AddRange(page.Values);
             }
 
+            _telemetry.FinishTimerAndLog(timer);
             return result;
         }
 

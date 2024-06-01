@@ -1,4 +1,5 @@
 using GatherBuddy.Sync.Services;
+using GatherBuddy.Sync.Utilities;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ var host = new HostBuilder()
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
         services.AddSingleton<ITableService, TableService>();
+        services.AddSingleton<Telemetry>();
     })
     .Build();
 

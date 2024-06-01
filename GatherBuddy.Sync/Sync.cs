@@ -1,11 +1,13 @@
 using GatherBuddy.FishTimer;
 using GatherBuddy.Sync.Models;
 using GatherBuddy.Sync.Services;
+using GatherBuddy.Sync.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace GatherBuddy.Sync
 {
@@ -13,11 +15,13 @@ namespace GatherBuddy.Sync
     {
         private readonly ILogger<Sync> _logger;
         private readonly ITableService _tableService;
+        private readonly Telemetry _telemetry;
 
-        public Sync(ILogger<Sync> logger, ITableService tableService)
+        public Sync(ILogger<Sync> logger, Telemetry telemetry, ITableService tableService)
         {
             _logger = logger;
             _tableService = tableService;
+            _telemetry = telemetry;
         }
 
         [Function("SyncWrite")]
@@ -51,8 +55,17 @@ namespace GatherBuddy.Sync
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Function, "get", Route = "SyncRead/{spotId:int}")] HttpRequest req, int spotId)
         {
             //TODO: Cache this?
+            var timer = Stopwatch.StartNew();
             var partitionKey = spotId.ToString();
-            return new OkObjectResult(await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey));
+            var baitTimes = await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey);
+            var response = baitTimes.GroupBy(x => x.CatchItemId).ToDictionary(x => x.Key, x => x.ToDictionary(x => x.BaitItemId, x => x.MapTo()));
+            _telemetry.FinishTimerAndLog(timer);
+            return new ContentResult()
+            {
+                Content = JsonConvert.SerializeObject(response),
+                ContentType = "application/json",
+                StatusCode = 200
+            };
         }
     }
 }
