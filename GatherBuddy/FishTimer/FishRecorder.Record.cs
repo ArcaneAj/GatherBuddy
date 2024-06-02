@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.Plugin.Services;
@@ -221,11 +219,8 @@ public partial class FishRecorder
         {
             Task.Run(() =>
             {
-                var playerName = Dalamud.ClientState.LocalPlayer?.Name ?? Guid.NewGuid().ToString();
-                var identifier = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(playerName.ToString())));
-
                 Communicator.Print("Beginning upload");
-                var uploadedTimestamps = _httpService.UploadFishData(Records.Select(r => r.ToJson()), identifier);
+                var uploadedTimestamps = _httpService.UploadFishData(Records.Select(r => r.ToJson()));
 
                 if (uploadedTimestamps != null)
                 {

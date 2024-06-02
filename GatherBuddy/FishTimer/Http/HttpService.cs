@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using static GatherBuddy.FishTimer.FishRecordTimes;
 
 namespace GatherBuddy.FishTimer.Http
@@ -10,14 +13,21 @@ namespace GatherBuddy.FishTimer.Http
     {
         private readonly HttpClient _client = new HttpClient(new HttpClientHandler { Proxy = null, UseProxy = false});
 
+        public HttpService()
+        {
+            var playerName = Dalamud.ClientState.LocalPlayer?.Name ?? Guid.NewGuid().ToString();
+            var identifier = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(playerName.ToString())));
+            _client.DefaultRequestHeaders.Add("Identifier", identifier);
+        }
+
         public Dictionary<uint, Dictionary<uint, Times>>? GetFishData(string spotId) {
             var url = string.Join("/", GatherBuddy.Config.CloudBaseUrl, "api/SyncRead", spotId);
             return Get<Dictionary<uint, Dictionary<uint, Times>>>(url);
         }
 
-        public List<int>? UploadFishData(IEnumerable<FishRecord.JsonStruct> body, string identifier)
+        public List<int>? UploadFishData(IEnumerable<FishRecord.JsonStruct> body)
         {
-            var url = string.Join("/", GatherBuddy.Config.CloudBaseUrl, "api/SyncWrite", identifier);
+            var url = string.Join("/", GatherBuddy.Config.CloudBaseUrl, "api/SyncWrite");
             return Post<List<int>>(url, body);
         }
 
