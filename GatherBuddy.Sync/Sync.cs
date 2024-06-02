@@ -38,7 +38,7 @@ namespace GatherBuddy.Sync
             var identifier = req.Headers["Identifier"].FirstOrDefault();
             if (string.IsNullOrEmpty(identifier))
             {
-                return new ForbidResult();
+                return new StatusCodeResult(403);
             }
 
             var entities = records.Where(x => x.CatchItemId != 0).Select(x => FishRecordTableEntity.FromFishRecord(x, identifier)).ToList();
