@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.Plugin.Services;
@@ -213,6 +215,35 @@ public partial class FishRecorder
         GatherBuddy.Log.Verbose($"Mooching with {Record.Bait.Name} at {spot?.Name ?? "Undiscovered Fishing Hole"}.");
     }
 
+    private void UploadLogs()
+    {
+        if (GatherBuddy.Config.EnableCrowdSourceTimers)
+        {
+            Task.Run(() =>
+            {
+                var playerName = Dalamud.ClientState.LocalPlayer?.Name ?? Guid.NewGuid().ToString();
+                var identifier = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(playerName.ToString())));
+
+                Communicator.Print("Beginning upload");
+                var uploadedTimestamps = _httpService.UploadFishData(Records.Select(r => r.ToJson()), identifier);
+
+                if (uploadedTimestamps != null)
+                {
+                    var recordsToRemove = Records.Select((v, i) => new { v, i })
+                        .Where(x => uploadedTimestamps.Contains((int)(x.v.TimeStamp / 1000)))
+                        .Select(x => x.i)
+                        .OrderByDescending(i => i);
+                    foreach (var id in recordsToRemove)
+                    {
+                        Remove(id);
+                    }
+                }
+
+                Communicator.Print("Finished upload");
+            }).Forget();
+        }
+    }
+
     private void OnFishingStop()
     {
         if (Timer.IsRunning)
@@ -251,8 +282,11 @@ public partial class FishRecorder
                 Step |= CatchSteps.FishReeled;
                 break;
             case FishingState.PoleReady:
+                OnFishingStop();
+                break;
             case FishingState.Quit:
                 OnFishingStop();
+                UploadLogs();
                 break;
         }
     }
