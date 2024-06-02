@@ -320,10 +320,22 @@ public partial class Interface
                 GatherBuddy.Config.HideFishSizePopup, b => GatherBuddy.Config.HideFishSizePopup = b);
 
         public static void DrawCrowdSourceTimers()
-            => DrawCheckbox("Opt In To Crowd Sourced Fish Timers",
-                "Occasionally uploads the fish you catch and their catch timers to a central service, which in return can be queried for the max/min time across all fish.",
-                GatherBuddy.Config.EnableCrowdSourceTimers, b => GatherBuddy.Config.EnableCrowdSourceTimers = b);
+        {
+            if (ImGui.TreeNodeEx("Crowd Sourcing"))
+            {
+                DrawCheckbox("Opt In To Crowd Sourced Fish Timers",
+                    "Occasionally uploads the fish you catch and their catch timers to a central service, which in return can be queried for the max/min time across all fish.",
+                    GatherBuddy.Config.EnableCrowdSourceTimers, b => GatherBuddy.Config.EnableCrowdSourceTimers = b);
+                if (GatherBuddy.Config.EnableCrowdSourceTimers)
+                {
+                    DrawFormatInput("Cloud Service Url",
+                            "Url for a valid instance of the gather buddy sync function. See the git page for information to set up a private database.",
+                            GatherBuddy.Config.CloudBaseUrl, Configuration.DefaultCloudBaseUrl, s => GatherBuddy.Config.CloudBaseUrl = s);
+                }
 
+                ImGui.TreePop();
+            }
+        }
 
         // Spearfishing Helper
         public static void DrawSpearfishHelperBox()

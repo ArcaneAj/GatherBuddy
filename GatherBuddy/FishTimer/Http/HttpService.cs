@@ -10,10 +10,6 @@ namespace GatherBuddy.FishTimer.Http
     {
         private readonly HttpClient _client = new HttpClient(new HttpClientHandler { Proxy = null, UseProxy = false});
 
-        public HttpService() {
-            _client.DefaultRequestHeaders.Add("x-functions-key", GatherBuddy.Config.CloudKey);
-        }
-
         public Dictionary<uint, Dictionary<uint, Times>>? GetFishData(string spotId) {
             var url = string.Join("/", GatherBuddy.Config.CloudBaseUrl, "api/SyncRead", spotId);
             return Get<Dictionary<uint, Dictionary<uint, Times>>>(url);

@@ -88,7 +88,6 @@ public partial class Configuration : IPluginConfiguration
     public bool   EnableCrowdSourceTimers { get; set; } = false;
 #endif
     public string CloudBaseUrl            { get; set; } = DefaultCloudBaseUrl;
-    public string CloudKey                { get; set; } = DefaultCloudKey;
     public ushort FishTimerScale          { get; set; } = 40000;
     public byte   ShowSecondIntervals     { get; set; } = 7;
 
