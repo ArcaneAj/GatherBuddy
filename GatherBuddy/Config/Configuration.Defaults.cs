@@ -21,5 +21,5 @@ public partial class Configuration
     public const int DefaultSeColorCommands  = 31;
     public const int DefaultSeColorArguments = 546;
     public const int DefaultSeColorAlarm     = 518;
-    public static readonly string DefaultCloudBaseUrl = "https://gatherbuddy.azurewebsites.net";
+    public static readonly string DefaultCloudBaseUrl = "https://gatherbuddy.azure-api.net/v1";
 }
