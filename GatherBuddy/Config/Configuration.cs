@@ -83,10 +83,12 @@ public partial class Configuration : IPluginConfiguration
     public bool   ShowFishTimerUptimes    { get; set; } = true;
     public bool   HideFishSizePopup       { get; set; } = false;
 #if DEBUG
-    public bool EnableCrowdSourceTimers { get; set; } = true;
+    public bool   EnableCrowdSourceTimers { get; set; } = true;
 #else
     public bool   EnableCrowdSourceTimers { get; set; } = false;
 #endif
+    public string CloudBaseUrl            { get; set; } = "https://gatherbuddy.azurewebsites.net";
+    public string CloudKey                { get; set; } = "Msg1EidlO_A_I_tnkmOYCN0tvEttxuY-RzzxnEUDPinrAzFuoFGyNw==";
     public ushort FishTimerScale          { get; set; } = 40000;
     public byte   ShowSecondIntervals     { get; set; } = 7;
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Dalamud;
 using Dalamud.Plugin.Services;
 using GatherBuddy.Classes;
@@ -37,9 +38,9 @@ public partial class FishRecorder
     internal          FishingState  LastState = FishingState.None;
     internal readonly Stopwatch     Timer     = new();
     private readonly HttpService _httpService = new();
-    private Dictionary<uint, Dictionary<uint, Times>> _extendedTimes = [];
+    private Dictionary<uint, Dictionary<uint, Dictionary<uint, Times>>> _extendedTimes = [];
 
-    public Dictionary<uint, Dictionary<uint, Times>> ExtendedTimes => _extendedTimes;
+    public Dictionary<uint, Dictionary<uint, Dictionary<uint, Times>>> ExtendedTimes => _extendedTimes;
 
     public Fish? LastCatch;
 
@@ -143,14 +144,16 @@ public partial class FishRecorder
         Record.Bait        = GetCurrentBait();
         Record.FishingSpot = spot;
 
-        if (GatherBuddy.Config.EnableCrowdSourceTimers && spot != null)
+        if (GatherBuddy.Config.EnableCrowdSourceTimers && spot != null && !_extendedTimes.ContainsKey(spot.Id))
         {
-            var timer = Stopwatch.StartNew();
-            _extendedTimes = _httpService.GetFishData(spot.Id.ToString()) ?? [];
-            timer.Stop();
-
-            Communicator.Print("OnBeganFishing");
-            Communicator.Print(timer.ElapsedMilliseconds.ToString());
+            _extendedTimes[spot.Id] = [];
+            Task.Run(() =>
+            {
+                Communicator.Print("Beginning cache fetch");
+                _extendedTimes[spot.Id] = _httpService.GetFishData(spot.Id.ToString()) ?? [];
+                Communicator.Print("Finished cache fetch");
+                OnCacheUpdate();
+            }).Forget();
         }
 
         if (Record.HasSpot)

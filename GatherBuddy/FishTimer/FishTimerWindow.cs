@@ -56,6 +56,7 @@ public partial class FishTimerWindow : Window
         IsOpen             = GatherBuddy.Config.ShowFishTimer;
         Namespace          = "FishingTimer";
         RespectCloseHotkey = false;
+        recorder.OnCacheUpdate += UpdateFish;
     }
 
     private static float Rounding

@@ -78,7 +78,9 @@ public partial class FishTimerWindow
                 }
             }
 
-            if (recorder.ExtendedTimes.TryGetValue(fish.ItemId, out var extendedTimesByBait))
+            var spotExtendedTimes = recorder.ExtendedTimes[spot.Id];
+
+            if (spotExtendedTimes.TryGetValue(fish.ItemId, out var extendedTimesByBait))
             {
                 foreach (var extendedTime in extendedTimesByBait.Values)
                 {

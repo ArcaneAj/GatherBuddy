@@ -13,6 +13,8 @@ public partial class FishRecorder : IDisposable
     public readonly List<FishRecord>                  Records = new();
     public readonly Dictionary<uint, FishRecordTimes> Times   = new();
 
+    public Action OnCacheUpdate { get; internal set; } = () => { };
+
     public FishRecorder(IGameInteropProvider provider)
     {
         FishRecordDirectory = Dalamud.PluginInterface.ConfigDirectory;
