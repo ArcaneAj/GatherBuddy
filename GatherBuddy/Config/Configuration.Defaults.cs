@@ -22,4 +22,5 @@ public partial class Configuration
     public const int DefaultSeColorArguments = 546;
     public const int DefaultSeColorAlarm     = 518;
     public static readonly string DefaultCloudKey = "Msg1EidlO_A_I_tnkmOYCN0tvEttxuY-RzzxnEUDPinrAzFuoFGyNw==";
+    public static readonly string DefaultCloudBaseUrl = "https://gatherbuddy.azurewebsites.net";
 }
