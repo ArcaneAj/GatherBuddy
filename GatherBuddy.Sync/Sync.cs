@@ -14,13 +14,14 @@ namespace GatherBuddy.Sync
     public class Sync
     {
         private readonly ILogger<Sync> _logger;
-        private readonly ITableService _tableService;
+        private readonly IDataService _dataService;
         private readonly Telemetry _telemetry;
+        private const string CatchLogContainerName = "catchlog";
 
-        public Sync(ILogger<Sync> logger, Telemetry telemetry, ITableService tableService)
+        public Sync(ILogger<Sync> logger, Telemetry telemetry, IDataService dataService)
         {
             _logger = logger;
-            _tableService = tableService;
+            _dataService = dataService;
             _telemetry = telemetry;
         }
 
@@ -43,16 +44,13 @@ namespace GatherBuddy.Sync
 
             var entities = records.Where(x => x.CatchItemId != 0).Select(x => FishRecordTableEntity.FromFishRecord(x, identifier)).ToList();
 
-            foreach (var entityGroup in entities.GroupBy(e => e.GetTableId()))
+            try
             {
-                try
-                {
-                    await _tableService.UpsertBatchAsync(entityGroup.Key, entityGroup);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, ex.ToString());
-                }
+                await _dataService.UpsertBatchAsync(CatchLogContainerName, entities);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.ToString());
             }
 
             return new OkObjectResult(entities.Select(x => x.CatchTimestamp));
@@ -64,7 +62,7 @@ namespace GatherBuddy.Sync
             //TODO: Cache this?
             var timer = Stopwatch.StartNew();
             var partitionKey = spotId.ToString();
-            var baitTimes = await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey);
+            var baitTimes = await _dataService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey);
             var response = baitTimes.GroupBy(x => x.CatchItemId).ToDictionary(x => x.Key, x => x.ToDictionary(x => x.BaitItemId, x => x.MapTo()));
             _telemetry.FinishTimerAndLog(timer);
             return new ContentResult()

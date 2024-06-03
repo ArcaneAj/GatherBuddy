@@ -10,42 +10,33 @@ namespace GatherBuddy.Sync
     public class Process
     {
         private readonly ILogger _logger;
-        private readonly ITableService _tableService;
+        private readonly IDataService _dataService;
+        private const string CatchLogContainerName = "catchlog";
 
-        public Process(ILoggerFactory loggerFactory, ITableService tableService)
+        public Process(ILoggerFactory loggerFactory, IDataService dataService)
         {
             _logger = loggerFactory.CreateLogger<Process>();
-            _tableService = tableService;
+            _dataService = dataService;
         }
 
         [Function("ProcessManual")]
         public async Task<IActionResult> RunManual([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req)
         {
-            await ProcessTables();
+            await ProcessTable(CatchLogContainerName);
             return new OkResult();
         }
 
         [Function("Process")]
         public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer)
         {
-            await ProcessTables();
-        }
-
-        private async Task ProcessTables()
-        {
-            var tables = await _tableService.ListTablesAsync();
-            var tableNames = tables.Where(x => x.Name.StartsWith(FishRecordTableEntity.TablePrefix)).Select(x => x.Name);
-            foreach (var table in tableNames)
-            {
-                await ProcessTable(table);
-            }
+            await ProcessTable(CatchLogContainerName);
         }
 
         private async Task ProcessTable(string table)
         {
             var biteTimes = new Dictionary<string, BiteTimeTableEntity>();
             var processedEntities = new List<FishRecordTableEntity>();
-            await foreach (var entity in _tableService.QueryAllAsync<FishRecordTableEntity>(table))
+            await foreach (var entity in _dataService.QueryAllAsync<FishRecordTableEntity>(table))
             {
                 var biteTimePartitionKey = entity.FishingSpotId.ToString();
                 var biteTimeRowKey = entity.PartitionKey;
@@ -57,8 +48,8 @@ namespace GatherBuddy.Sync
             }
 
             var dirtyBiteTimes = biteTimes.Values.Where(x => x.Dirty);
-            await _tableService.UpsertBatchAsync(BiteTimeTableEntity.BiteTimeTableName, dirtyBiteTimes);
-            await _tableService.DeleteBatchAsync(table, processedEntities);
+            await _dataService.UpsertBatchAsync(BiteTimeTableEntity.BiteTimeTableName, dirtyBiteTimes);
+            await _dataService.DeleteBatchAsync(table, processedEntities);
         }
 
         private async Task<BiteTimeTableEntity> GetBiteTime(Dictionary<string, BiteTimeTableEntity> biteTimes, FishRecordTableEntity entity, string biteTimePartitionKey, string biteTimeRowKey, string biteTimeDictKey)
@@ -69,7 +60,7 @@ namespace GatherBuddy.Sync
             }
 
             // try fetch the bite time key
-            var biteTime = await _tableService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, biteTimePartitionKey, biteTimeRowKey);
+            var biteTime = await _dataService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, biteTimePartitionKey, biteTimeRowKey);
             if (biteTime == null) // else create a new one based on the current entity
             {
                 biteTime = new BiteTimeTableEntity(entity, biteTimePartitionKey, biteTimeRowKey);

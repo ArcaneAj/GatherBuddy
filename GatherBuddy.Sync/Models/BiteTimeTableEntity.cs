@@ -1,11 +1,14 @@
 ﻿using Azure;
-using Azure.Data.Tables;
 using GatherBuddy.FishTimer;
+using GatherBuddy.Sync.Services;
+using Newtonsoft.Json;
 
 namespace GatherBuddy.Sync.Models
 {
-    public class BiteTimeTableEntity : ITableEntity
+    public class BiteTimeTableEntity : IEntity
     {
+        [JsonProperty("id")]
+        public string Id { get { return RowKey; } }
         public BiteTimeTableEntity()
         {
             PartitionKey = string.Empty;

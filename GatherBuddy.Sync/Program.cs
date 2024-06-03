@@ -16,7 +16,7 @@ var host = new HostBuilder()
     {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
-        services.AddSingleton<ITableService, TableService>();
+        services.AddSingleton<IDataService, CosmosService>();
         services.AddSingleton<Telemetry>();
     })
     .Build();
