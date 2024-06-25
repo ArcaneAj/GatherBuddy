@@ -1,5 +1,4 @@
 ﻿using Azure;
-using GatherBuddy.FishTimer;
 using GatherBuddy.Sync.Services;
 using Newtonsoft.Json;
 
@@ -14,6 +13,9 @@ namespace GatherBuddy.Sync.Models
             PartitionKey = string.Empty;
             RowKey = string.Empty;
             Dirty = false;
+            Max = 0;
+            Min = ushort.MaxValue;
+            CatchHistory = [];
         }
 
         public BiteTimeTableEntity(FishRecordTableEntity fishRecord, string biteTimePartitionKey, string biteTimeRowKey) {
@@ -21,68 +23,57 @@ namespace GatherBuddy.Sync.Models
             RowKey = biteTimeRowKey;
             Max = 0;
             Min = ushort.MaxValue;
-            MaxChum = 0;
-            MinChum = ushort.MaxValue;
+            Chum = fishRecord.Chum;
             BaitItemId = fishRecord.BaitItemId;
             CatchItemId = fishRecord.CatchItemId;
             Dirty = true;
-            Update(fishRecord.BiteTime, fishRecord.Chum);
+            CatchHistory = [];
         }
 
         public string PartitionKey { get; set; }
         public string RowKey { get; set; }
         public DateTimeOffset? Timestamp { get; set; }
         public ETag ETag { get; set; }
-        public long Max { get; set; }
-        public long Min { get; set; }
-        public long MaxChum { get; set; }
-        public long MinChum { get; set; }
+        public ushort Max { get; set; }
+        public ushort Min { get; set; }
+        public bool Chum { get; set; }
         public long BaitItemId { get; set; }
         public long CatchItemId { get; set; }
+        public long FishingSpotId => long.Parse(PartitionKey);
+
+        public Dictionary<long, long> CatchHistory { get; set; }
         internal bool Dirty { get; set; }
         internal const string BiteTimeTableName = "bitetimes";
 
-        public void Update(long biteTime, bool chum)
+        public void Update(ushort biteTime)
         {
-            if (chum)
+            // Implicitly rounds down, so the 0 bucket is everything from 0 to 999ms
+            var bucket = biteTime / 1000;
+            if (CatchHistory.ContainsKey(bucket))
             {
-                if (biteTime < MinChum)
-                {
-                    MinChum = biteTime;
-                    Dirty = true;
-                }
-
-                if (biteTime > MaxChum)
-                {
-                    MaxChum = biteTime;
-                    Dirty = true;
-                }
+                CatchHistory[bucket]++;
             }
             else
             {
-                if (biteTime < Min)
-                {
-                    Min = biteTime;
-                    Dirty = true;
-                }
-
-                if (biteTime > Max)
-                {
-                    Max = biteTime;
-                    Dirty = true;
-                }
+                CatchHistory[bucket] = 1;
             }
+
+            UpdateMinMax(biteTime);
         }
 
-        public FishRecordTimes.Times MapTo()
+        public void UpdateMinMax(ushort biteTime)
         {
-            return new FishRecordTimes.Times
+            if (biteTime < Min)
             {
-                Min = (ushort)Min,
-                Max = (ushort)Max,
-                MinChum = (ushort)MinChum,
-                MaxChum = (ushort)MaxChum,
-            };
+                Min = biteTime;
+                Dirty = true;
+            }
+
+            if (biteTime > Max)
+            {
+                Max = biteTime;
+                Dirty = true;
+            }
         }
     }
 }

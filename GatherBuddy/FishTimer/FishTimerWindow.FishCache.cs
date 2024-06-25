@@ -7,6 +7,7 @@ using Dalamud.Interface.Utility;
 using GatherBuddy.Classes;
 using GatherBuddy.Config;
 using GatherBuddy.Enums;
+using GatherBuddy.FishTimer.Http;
 using GatherBuddy.Gui;
 using GatherBuddy.Plugin;
 using GatherBuddy.Time;
@@ -65,31 +66,37 @@ public partial class FishTimerWindow
             _fish = ExtendedFishList.FirstOrDefault(f => f.Data == fish);
 
             // Get All and Bait Times and set caught-with-bait information.
-            _all          = new FishRecordTimes.Times();
-            _baitSpecific = new FishRecordTimes.Times();
-            Uncaught      = true;
+            _all = new Times();
+            _baitSpecific = new Times();
+            Uncaught = true;
             if (recorder.Times.TryGetValue(fish.ItemId, out var times))
             {
                 _all.Merge(times.All);
                 if (times.Data.TryGetValue(recorder.Record.BaitId, out var baitTimes))
                 {
                     _baitSpecific.Merge(baitTimes);
-                    Uncaught      = false;
+                    Uncaught = false;
                 }
             }
 
-            var spotExtendedTimes = recorder.ExtendedTimes[spot.Id];
-
-            if (spotExtendedTimes.TryGetValue(fish.ItemId, out var extendedTimesByBait))
+            var extendedTimesByChum = recorder.ExtendedTimes[spot.Id];
+            if (extendedTimesByChum.Any())
             {
-                foreach (var extendedTime in extendedTimesByBait.Values)
+                foreach (var chumPair in extendedTimesByChum)
                 {
-                    _all.Merge(extendedTime);
-                }
+                    var extendedTimesByFish = chumPair.Value;
+                    if (extendedTimesByFish.TryGetValue(fish.ItemId, out var extendedTimesByBait))
+                    {
+                        foreach (var extendedTime in extendedTimesByBait)
+                        {
+                            _all.Merge(extendedTime.Value.ToTimes());
+                        }
 
-                if (extendedTimesByBait.TryGetValue(recorder.Record.BaitId, out var baitExtendedTime))
-                {
-                    _baitSpecific.Merge(baitExtendedTime);
+                        if (extendedTimesByBait.TryGetValue(recorder.Record.BaitId, out var baitExtendedTime))
+                        {
+                            _baitSpecific.Merge(baitExtendedTime.ToTimes());
+                        }
+                    }
                 }
             }
 
@@ -97,11 +104,11 @@ public partial class FishTimerWindow
             var flags = recorder.Record.Flags;
             if (flags.HasFlag(FishRecord.Effects.Chum))
             {
-                SortOrder         = MakeSortOrder(Math.Min(_all.MinChum, _baitSpecific.MinChum), Math.Max(_all.MaxChum, _baitSpecific.MaxChum));
+                SortOrder = MakeSortOrder(Math.Min(_all.MinChum, _baitSpecific.MinChum), Math.Max(_all.MaxChum, _baitSpecific.MaxChum));
                 _baitSpecific.Max = _baitSpecific.MaxChum;
                 _baitSpecific.Min = _baitSpecific.MinChum;
-                _all.Max          = _all.MaxChum;
-                _all.Min          = _all.MinChum;
+                _all.Max = _all.MaxChum;
+                _all.Min = _all.MinChum;
             }
             else
             {
@@ -112,16 +119,16 @@ public partial class FishTimerWindow
             if (Uncaught)
                 SortOrder |= 1ul << 33;
 
-            _icon       = Icons.DefaultStorage[fish.ItemData.Icon];
+            _icon = Icons.DefaultStorage[fish.ItemData.Icon];
             Unavailable = false;
             if (fish.Predators.Length > 0 && !recorder.Record.Flags.HasFlag(FishRecord.Effects.Intuition))
             {
                 Unavailable = true;
-                SortOrder   = ulong.MaxValue;
+                SortOrder = ulong.MaxValue;
             }
 
             NextUptime = TimeInterval.Always;
-            _textLine  = fish.Name[GatherBuddy.Language];
+            _textLine = fish.Name[GatherBuddy.Language];
 
             var uptime = GatherBuddy.UptimeManager.NextUptime(fish, spot.Territory, GatherBuddy.Time.ServerTime);
             if (GatherBuddy.Config.ShowFishTimerUptimes && uptime != TimeInterval.Invalid && uptime != TimeInterval.Never)

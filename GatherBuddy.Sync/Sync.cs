@@ -1,4 +1,3 @@
-using GatherBuddy.FishTimer;
 using GatherBuddy.Sync.Models;
 using GatherBuddy.Sync.Services;
 using GatherBuddy.Sync.Utilities;
@@ -29,7 +28,7 @@ namespace GatherBuddy.Sync
         public async Task<IActionResult> Post([HttpTrigger(AuthorizationLevel.Function, "post", Route = "SyncWrite")] HttpRequest req)
         {
             var data = await new StreamReader(req.Body).ReadToEndAsync();
-            var records = JsonConvert.DeserializeObject<List<FishRecord.JsonStruct>>(data);
+            var records = JsonConvert.DeserializeObject<List<FishRecord>>(data);
             if (records == null)
             {
                 return new BadRequestObjectResult("Could not parse json. Aborting import.");
@@ -63,7 +62,9 @@ namespace GatherBuddy.Sync
             var timer = Stopwatch.StartNew();
             var partitionKey = spotId.ToString();
             var baitTimes = await _dataService.ReadAsync<BiteTimeTableEntity>(BiteTimeTableEntity.BiteTimeTableName, partitionKey);
-            var response = baitTimes.GroupBy(x => x.CatchItemId).ToDictionary(x => x.Key, x => x.ToDictionary(x => x.BaitItemId, x => x.MapTo()));
+            var response = baitTimes
+                .GroupBy(x => x.Chum).ToDictionary(x => x.Key, x => x.GroupBy(x => x.CatchItemId)
+                .ToDictionary(x => x.Key, x => x.ToDictionary(x => x.BaitItemId, x => x)));
             _telemetry.FinishTimerAndLog(timer);
             return new ContentResult()
             {

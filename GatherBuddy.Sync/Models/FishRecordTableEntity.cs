@@ -1,6 +1,5 @@
 ﻿using Azure;
-using GatherBuddy.Enums;
-using GatherBuddy.FishTimer;
+using GatherBuddy.Sync.Enums;
 using GatherBuddy.Sync.Services;
 using GatherBuddy.Sync.Utilities;
 using Newtonsoft.Json;
@@ -22,12 +21,12 @@ namespace GatherBuddy.Sync.Models
         }
 
         [JsonProperty("RowKey")]
-        public string RowKey { get; set; }
+        public string RowKey { get; set; } = string.Empty;
         public DateTimeOffset? Timestamp { get; set; }
         public ETag ETag { get; set; }
         internal static string TablePrefix => "fishingspotid";
 
-        public static FishRecordTableEntity FromFishRecord(FishRecord.JsonStruct record, string name)
+        public static FishRecordTableEntity FromFishRecord(FishRecord record, string name)
         {
             return new()
             {
@@ -59,7 +58,7 @@ namespace GatherBuddy.Sync.Models
             };
         }
 
-        public static FishRecord.JsonStruct ToFishRecord(FishRecordTableEntity entity)
+        public static FishRecord ToFishRecord(FishRecordTableEntity entity)
         {
             return new()
             {

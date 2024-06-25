@@ -20,9 +20,9 @@ namespace GatherBuddy.FishTimer.Http
             _client.DefaultRequestHeaders.Add("Identifier", identifier);
         }
 
-        public Dictionary<uint, Dictionary<uint, Times>>? GetFishData(string spotId) {
+        public Dictionary<bool, Dictionary<uint, Dictionary<uint, FishData>>>? GetFishData(string spotId) {
             var url = string.Join("/", GatherBuddy.Config.CloudBaseUrl, "api/SyncRead", spotId);
-            return Get<Dictionary<uint, Dictionary<uint, Times>>>(url);
+            return Get<Dictionary<bool, Dictionary<uint, Dictionary<uint, FishData>>>>(url);
         }
 
         public List<int>? UploadFishData(IEnumerable<FishRecord.JsonStruct> body)

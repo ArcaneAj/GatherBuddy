@@ -38,9 +38,9 @@ public partial class FishRecorder
     internal          FishingState  LastState = FishingState.None;
     internal readonly Stopwatch     Timer     = new();
     private readonly HttpService _httpService = new();
-    private Dictionary<uint, Dictionary<uint, Dictionary<uint, Times>>> _extendedTimes = [];
+    private Dictionary<uint, Dictionary<bool, Dictionary<uint, Dictionary<uint, FishData>>>> _extendedTimes = [];
 
-    public Dictionary<uint, Dictionary<uint, Dictionary<uint, Times>>> ExtendedTimes => _extendedTimes;
+    public Dictionary<uint, Dictionary<bool, Dictionary<uint, Dictionary<uint, FishData>>>> ExtendedTimes => _extendedTimes;
 
     public Fish? LastCatch;
 
@@ -225,7 +225,7 @@ public partial class FishRecorder
                 if (uploadedTimestamps != null)
                 {
                     var recordsToRemove = Records.Select((v, i) => new { v, i })
-                        .Where(x => uploadedTimestamps.Contains((int)(x.v.TimeStamp / 1000)))
+                        .Where(x => uploadedTimestamps.Contains((int)(x.v.TimeStamp / 1000)) || x.v.CatchId == 0)
                         .Select(x => x.i)
                         .OrderByDescending(i => i);
                     foreach (var id in recordsToRemove)

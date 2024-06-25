@@ -1,6 +1,4 @@
-﻿using Azure;
-using Azure.Identity;
-using GatherBuddy.Sync.Utilities;
+﻿using GatherBuddy.Sync.Utilities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Extensions.Configuration;
@@ -77,14 +75,14 @@ namespace GatherBuddy.Sync.Services
 
             foreach (var item in entities)
             {
-                await container.UpsertItemAsync(item);
-                //concurrentTasks.Add(container.UpsertItemAsync(item));
+                //await container.UpsertItemAsync(item);
+                concurrentTasks.Add(container.UpsertItemAsync(item));
             }
 
             await Task.WhenAll(concurrentTasks);
         }
 
-        public async IAsyncEnumerable<T> QueryAllAsync<T>(string tableName)
+        public async IAsyncEnumerable<T> QueryAllIterableAsync<T>(string tableName)
         {
             var container = await GetContainerAsync(tableName);
             var query = new QueryDefinition(query: "SELECT * FROM c");
@@ -100,6 +98,24 @@ namespace GatherBuddy.Sync.Services
                     yield return item;
                 }
             }
+        }
+
+        public async Task<IEnumerable<T>> QueryAllAsync<T>(string tableName)
+        {
+            var container = await GetContainerAsync(tableName);
+            var query = new QueryDefinition(query: "SELECT * FROM c");
+            using var feed = container.GetItemQueryIterator<T>(
+                queryDefinition: query
+            );
+
+            var result = new List<T>();
+
+            while (feed.HasMoreResults)
+            {
+                result.AddRange(await feed.ReadNextAsync());
+            }
+
+            return result;
         }
 
         public async Task<T?> ReadAsync<T>(string tableName, string partitionKey, string rowKey)

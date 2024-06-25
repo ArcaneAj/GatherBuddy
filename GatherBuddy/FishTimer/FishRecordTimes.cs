@@ -57,6 +57,17 @@ public class FishRecordTimes
             MinChum = Math.Min(MinChum, times.MinChum);
             MaxChum = Math.Max(MaxChum, times.MaxChum);
         }
+
+        //public Times Merge(Times times)
+        //{
+        //    return new Times()
+        //    {
+        //        Min = Math.Min(Min, times.Min),
+        //        Max = Math.Max(Max, times.Max),
+        //        MinChum = Math.Min(MinChum, times.MinChum),
+        //        MaxChum = Math.Max(MaxChum, times.MaxChum),
+        //    };
+        //}
     }
 
     public Times                   All  = new();
